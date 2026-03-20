@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Status --></label>
+    <name>Status__c</name>
+    <picklistValues>
+        <masterLabel>CCPA</masterLabel>
+        <translation><!-- CCPA --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>PCI,</masterLabel>
+        <translation><!-- PCI, --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>PII,</masterLabel>
+        <translation><!-- PII, --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

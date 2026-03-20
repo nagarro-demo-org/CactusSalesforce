@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConnectedApp xmlns="http://soap.sforce.com/2006/04/metadata">
+    <contactEmail>pratima.maiti77@gmail.com</contactEmail>
+    <label>mahindra_con_app</label>
+    <oauthConfig>
+        <callbackUrl>http://localhost:1717/OauthRedirect</callbackUrl>
+        <certificate>MIIDjDCCAnQCCQCVm0XCGfY/qDANBgkqhkiG9w0BAQsFADCBhzELMAkGA1UEBhMCSU4xCzAJBgNVBAgTAldCMRAwDgYDVQQHEwdrb2xrYXRhMRAwDgYDVQQKEwdOYWdhcnJvMQswCQYDVQQLEwJJVDEQMA4GA1UEAxMHUHJhdGltYTEoMCYGCSqGSIb3DQEJARYZcHJhdGltYS5tYWl0aUBuYWdhcnJvLmNvbTAeFw0yMzAzMzAwNzM3NTdaFw0yNDAzMjkwNzM3NTdaMIGHMQswCQYDVQQGEwJJTjELMAkGA1UECBMCV0IxEDAOBgNVBAcTB2tvbGthdGExEDAOBgNVBAoTB05hZ2Fycm8xCzAJBgNVBAsTAklUMRAwDgYDVQQDEwdQcmF0aW1hMSgwJgYJKoZIhvcNAQkBFhlwcmF0aW1hLm1haXRpQG5hZ2Fycm8uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs5+vjGA8gzJ/qJEMO2uVwZvV1gru0Y2oIwTrVQ9jF212+khEO/iWacOKeYnHlTIa4n7QdVYMrp1/9aHunroZ+BGiL9BIZYHkk1WeVi+Gx+Ln+OiHYMFXgeTx2S4eZjXVGf0eUd0vozx/jFCQSN2x3MiaqhdPTX2lUe1KPNvhSRbeXAqC6sos8uUa/+k4WhJ8110axaj0WFo7vorlCC0An6ayjy01f/C329Z3DLw+CK6lK7ta6/Vxv2XelNM66WBdDU/XbzViWnEp/MkZk2K0NSzt6GV12aFiIDITTuL3MOUWI6LZoQjeXdmuGktBMa3y9Hi0ch6DwDuwbe3OtkgCBwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQB32Qe5TiBLPjLHXsP8RLDmRWgQqquU3ulrm2VzePz+dhwJ+LRRPDePvNFu/s6ZiYPtgS4emaj2+sf6NcgAP9Zz7mFK2HFHTMvvA/Lrw7A+IM1azhgEqVW49D2m9nAf/8jkNFKG0DVyzcSQdj3a2you89vrScWtZuhs2oHaS63iIeXzDKwv0zFJe6JHINmiG12o2xwPQxy0hSOzl/emXSvSoNzqEjzy5Y6EgsMlr2NrHIMYs+AxvWaZ0NtRrJChrHFEah5/sUmN7lsFgCMF+M79Ht5KZWR2Q2OymiyfoyzWfo1/lIdUqVaV0ENSbHdSiD12zrsPcVjFAdUdOUY+LQn3</certificate>
+        <consumerKey>3MVG9pRzvMkjMb6kNn45Qi9K2FCNKjkmkwl3gCcG.6IBJHetqSB3JH2Mx6yVPiKwWwm3T7.dxBuzuxa0MzryA</consumerKey>
+        <isAdminApproved>true</isAdminApproved>
+        <isClientCredentialEnabled>false</isClientCredentialEnabled>
+        <isCodeCredentialEnabled>false</isCodeCredentialEnabled>
+        <isCodeCredentialPostOnly>false</isCodeCredentialPostOnly>
+        <isConsumerSecretOptional>false</isConsumerSecretOptional>
+        <isIntrospectAllTokens>false</isIntrospectAllTokens>
+        <isNamedUserJwtEnabled>false</isNamedUserJwtEnabled>
+        <isPkceRequired>false</isPkceRequired>
+        <isRefreshTokenRotationEnabled>false</isRefreshTokenRotationEnabled>
+        <isSecretRequiredForRefreshToken>true</isSecretRequiredForRefreshToken>
+        <isSecretRequiredForTokenExchange>false</isSecretRequiredForTokenExchange>
+        <isTokenExchangeEnabled>false</isTokenExchangeEnabled>
+        <scopes>Basic</scopes>
+        <scopes>Api</scopes>
+        <scopes>Web</scopes>
+        <scopes>RefreshToken</scopes>
+    </oauthConfig>
+    <oauthPolicy>
+        <ipRelaxation>ENFORCE</ipRelaxation>
+        <isTokenExchangeFlowEnabled>false</isTokenExchangeFlowEnabled>
+        <refreshTokenPolicy>infinite</refreshTokenPolicy>
+    </oauthPolicy>
+    <profileName>System Administrator</profileName>
+</ConnectedApp>

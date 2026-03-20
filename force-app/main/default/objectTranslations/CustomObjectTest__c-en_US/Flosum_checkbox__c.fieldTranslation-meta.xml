@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Flosum_checkbox --></label>
+    <name>Flosum_checkbox__c</name>
+</CustomFieldTranslation>
