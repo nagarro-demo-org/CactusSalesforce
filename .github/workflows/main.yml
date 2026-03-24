@@ -3,8 +3,12 @@ name: Salesforce Delta Deployment
 on:
   pull_request:
     branches: [ci, qa, uat, main]
+    #paths:
+    #  - 'force-app/**'
   push:
     branches: [ci, qa, uat, main]
+    #paths:
+    #  - 'force-app/**'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -95,3 +99,36 @@ jobs:
             --from $FROM \
             --output-dir delta \
             --generate-delta
+            --repo-dir force-app/ \
+            --api-version 66.0
+
+          echo "──── package.xml ────"
+          cat delta/package/package.xml || echo "(empty)"
+          echo "──── destructiveChanges.xml ────"
+          cat delta/destructiveChanges/destructiveChanges.xml 2>/dev/null || echo "(none)"
+      
+      # -----------------------------------------
+      # VALIDATION (PR)
+      # -----------------------------------------
+      - name: Validate Deployment (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          sf project deploy validate  \
+            --source-dir delta/force-app \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml
+            --target-org targetOrg \
+            --test-level RunLocalTests \
+            --wait 30
+
+      # -----------------------------------------
+      # DEPLOYMENT (Push)
+      # -----------------------------------------
+      - name: Deploy (Push)
+        if: github.event_name == 'push'
+        run: |
+          sf project deploy start \
+            --source-dir delta/force-app \
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml
+            --target-org targetOrg \
+            --test-level RunLocalTests \
+            --wait 30    
