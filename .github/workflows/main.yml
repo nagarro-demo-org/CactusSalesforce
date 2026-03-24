@@ -5,7 +5,9 @@ on:
     branches: [ci, qa, uat, main]
   push:
     branches: [ci, qa, uat, main]
-
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  
 jobs:
   validate-or-deploy:
     runs-on: ubuntu-latest
