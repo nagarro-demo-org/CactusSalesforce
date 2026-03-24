@@ -114,7 +114,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           sf project deploy validate  \
-            --source-dir delta/force-app \
+            --manifest delta/package/package.xml \
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunLocalTests \
@@ -127,7 +127,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           sf project deploy start \
-            --source-dir delta/force-app \
+            --manifest delta/package/package.xml \
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunLocalTests \
