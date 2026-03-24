@@ -98,8 +98,8 @@ jobs:
             --to $TO \
             --from $FROM \
             --output-dir delta \
-            --generate-delta
             --repo-dir force-app/ \
+            --generate-delta \            
             --api-version 66.0
 
           echo "──── package.xml ────"
