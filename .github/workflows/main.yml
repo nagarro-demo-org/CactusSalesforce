@@ -43,6 +43,9 @@ jobs:
     environment:
       name: ${{ needs.setup.outputs.env_name }}
 
+    #env:
+    #  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       # -----------------------------------------
       # Checkout & Setup
@@ -76,46 +79,3 @@ jobs:
             --alias targetOrg \
             --instance-url ${{ secrets.SF_INSTANCE_URL }}
 
-      # -----------------------------------------
-      # Generate Delta
-      # -----------------------------------------
-      - name: Generate Delta
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            FROM=${{ github.event.pull_request.base.sha }}
-            TO=${{ github.event.pull_request.head.sha }}
-          else
-            FROM=${{ github.event.before }}
-            TO=${{ github.sha }}
-          fi
-
-          sf sgd source delta \
-            --to $TO \
-            --from $FROM \
-            --output-dir delta \
-            --generate-delta
-
-      # -----------------------------------------
-      # VALIDATION (PR)
-      # -----------------------------------------
-      - name: Validate Deployment (PR)
-        if: github.event_name == 'pull_request'
-        run: |
-          sf project deploy start \
-            --source-dir delta/force-app \
-            --target-org targetOrg \
-            --test-level RunLocalTests \
-            --dry-run \
-            --wait 30
-
-      # -----------------------------------------
-      # DEPLOYMENT (Push)
-      # -----------------------------------------
-      - name: Deploy (Push)
-        if: github.event_name == 'push'
-        run: |
-          sf project deploy start \
-            --source-dir delta/force-app \
-            --target-org targetOrg \
-            --test-level RunLocalTests \
-            --wait 30
