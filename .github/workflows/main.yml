@@ -7,7 +7,7 @@ on:
     branches: [ci, qa, uat, main]
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  
+
 jobs:
   validate-or-deploy:
     runs-on: ubuntu-latest
@@ -17,15 +17,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # required for delta
+
       - name: Check Node.js version
         run: node -v
-
-
 
       - name: Install Salesforce CLI
         run: |
           npm install -g @salesforce/cli
+          sf version
 
       - name: Install sfdx-git-delta
-        run: |
-          sf plugins install sfdx-git-delta
+        run: |        
+          echo y | sf plugins install sfdx-git-delta
+          sfdx plugins | grep sfdx-git-delta
