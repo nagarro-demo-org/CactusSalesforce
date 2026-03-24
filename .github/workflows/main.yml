@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------------------
+      # Checkout Repository & Install the Plugins
+      # -----------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -30,3 +33,50 @@ jobs:
         run: |        
           echo y | sf plugins install sfdx-git-delta
           sfdx plugins | grep sfdx-git-delta
+    
+      # ----------------------------
+      # Determine Environment
+      # ----------------------------
+      - name: Set target environment
+        id: env
+        run: |
+          if [[ "${{ github.base_ref }}" == "ci" || "${{ github.ref }}" == "refs/heads/ci" ]]; then
+            echo "env_name=CI" >> $GITHUB_OUTPUT
+            echo "auth_secret=SFDX_AUTH_URL_CI" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.base_ref }}" == "qa" || "${{ github.ref }}" == "refs/heads/qa" ]]; then
+            echo "env_name=QA" >> $GITHUB_OUTPUT
+            echo "auth_secret=SFDX_AUTH_URL_QA" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.base_ref }}" == "uat" || "${{ github.ref }}" == "refs/heads/uat" ]]; then
+            echo "env_name=UAT" >> $GITHUB_OUTPUT
+            echo "auth_secret=SFDX_AUTH_URL_UAT" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.base_ref }}" == "main" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "env_name=PROD" >> $GITHUB_OUTPUT
+            echo "auth_secret=SFDX_AUTH_URL_PROD" >> $GITHUB_OUTPUT
+          fi
+
+      # ----------------------------
+    	# Authenticate using JWT
+    	# ----------------------------
+      - name: Authenticate to Salesforce (JWT)
+        run: |
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+          if [[ "${{ steps.env.outputs.env_name }}" == "CI" ]]; then
+            CLIENT_ID=${{ secrets.SF_CONSUMER_KEY_CI }}
+            USERNAME=${{ secrets.SF_USERNAME_CI }}
+          elif [[ "${{ steps.env.outputs.env_name }}" == "QA" ]]; then
+            CLIENT_ID=${{ secrets.SF_CONSUMER_KEY_QA }}
+            USERNAME=${{ secrets.SF_USERNAME_QA }}
+          elif [[ "${{ steps.env.outputs.env_name }}" == "UAT" ]]; then
+            CLIENT_ID=${{ secrets.SF_CONSUMER_KEY_UAT }}
+            USERNAME=${{ secrets.SF_USERNAME_UAT }}
+          else
+            CLIENT_ID=${{ secrets.SF_CONSUMER_KEY_PROD }}
+            USERNAME=${{ secrets.SF_USERNAME_PROD }}
+          fi
+
+          sf org login jwt \
+            --client-id $CLIENT_ID \
+            --jwt-key-file server.key \
+            --username $USERNAME \
+            --alias targetOrg \
+            --instance-url https://login.salesforce.com
