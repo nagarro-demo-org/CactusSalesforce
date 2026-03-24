@@ -60,7 +60,8 @@ jobs:
       - name: Authenticate to Salesforce (JWT)
         run: |
           echo "${{ secrets.SF_JWT_KEY }}" > server.key
-          if [[ "${{ steps.env.outputs.env_name }}" == "CI" ]]; then
+          ENV=${{ steps.env.outputs.env_name }}
+          if [[ "${{ steps.env.outputs.env_name }}" == "CI" ]]; then            
             CLIENT_ID=${{ secrets.SF_CONSUMER_KEY_CI }}
             USERNAME=${{ secrets.SF_USERNAME_CI }}
           elif [[ "${{ steps.env.outputs.env_name }}" == "QA" ]]; then
@@ -78,5 +79,5 @@ jobs:
             --client-id $CLIENT_ID \
             --jwt-key-file server.key \
             --username $USERNAME \
-            --alias targetOrg \
+            --alias $USERNAME_$ENV \
             --instance-url https://login.salesforce.com
