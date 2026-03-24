@@ -115,7 +115,7 @@ jobs:
         run: |
           sf project deploy validate  \
             --source-dir delta/force-app \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunLocalTests \
             --wait 30
@@ -128,7 +128,7 @@ jobs:
         run: |
           sf project deploy start \
             --source-dir delta/force-app \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml
+            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunLocalTests \
             --wait 30    
