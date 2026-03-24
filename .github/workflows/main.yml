@@ -1,1 +1,30 @@
 name: Salesforce Delta Deployment
+
+on:
+  pull_request:
+    branches: [ci, qa, uat, main]
+  push:
+    branches: [ci, qa, uat, main]
+
+jobs:
+  validate-or-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # required for delta
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+
+      - name: Install sfdx-git-delta
+        run: |
+          sf plugins install sfdx-git-delta
