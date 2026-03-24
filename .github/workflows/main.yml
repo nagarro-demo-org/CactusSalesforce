@@ -117,7 +117,7 @@ jobs:
             --manifest delta/package/package.xml \
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
-            --test-level RunLocalTests \
+            --test-level RunRelevantTests \
             --wait 30
 
       # -----------------------------------------
@@ -130,5 +130,5 @@ jobs:
             --manifest delta/package/package.xml \
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
-            --test-level RunLocalTests \
+            --test-level RunRelevantTests \
             --wait 30    
