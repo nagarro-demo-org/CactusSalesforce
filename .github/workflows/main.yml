@@ -98,7 +98,7 @@ jobs:
             --to $TO \
             --from $FROM \
             --output-dir delta \
-            --repo-dir force-app/ \
+            --repo-dir . \
             --generate-delta \
             --api-version 66.0
 
