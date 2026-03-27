@@ -93,12 +93,13 @@ jobs:
       - name: Generate Delta
         run: |
           mkdir -p delta
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            FROM=${{ github.event.pull_request.base.sha }}
-            TO=${{ github.event.pull_request.head.sha }}
-          else
+          if [[ "${{ github.event_name }}" == "push" ]]; then
             FROM=${{ github.event.before }}
             TO=${{ github.sha }}
+          else
+            # Covers pull_request + pull_request_review
+            FROM=${{ github.event.pull_request.base.sha }}
+            TO=${{ github.event.pull_request.head.sha }}            
           fi
 
           sf sgd source delta \
