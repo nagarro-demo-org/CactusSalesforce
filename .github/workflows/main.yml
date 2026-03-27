@@ -3,12 +3,15 @@ name: Salesforce Delta Deployment
 on:
   pull_request:
     branches: [ci, qa, uat, main]
-    #paths:
-    #  - 'force-app/**'
-  push:
-    branches: [ci, qa, uat, main]
-    #paths:
-    #  - 'force-app/**'
+    paths:
+      - 'force-app/**'
+      - 'manifest/**'
+      - '.github/workflows/main.yml'
+
+  pull_request_review:
+    types: [submitted]
+    #branches: [ci, qa, uat, main]
+
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -124,7 +127,7 @@ jobs:
       # DEPLOYMENT (Push)
       # -----------------------------------------
       - name: Deploy (Push)
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
         run: |
           sf project deploy start \
             --manifest delta/package/package.xml \
