@@ -29,14 +29,18 @@ jobs:
       - name: Set target environment
         id: env
         run: |
-          if [[ "${{ github.base_ref }}" == "ci" || "${{ github.ref_name }}" == "ci" ]]; then
-            echo "env_name=CI" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.base_ref }}" == "qa" || "${{ github.ref_name }}" == "qa" ]]; then
-            echo "env_name=QA" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.base_ref }}" == "uat" || "${{ github.ref_name }}" == "uat" ]]; then
-            echo "env_name=UAT" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
+            TARGET="${{ github.event.pull_request.base.ref }}"
           else
-            echo "env_name=PROD" >> $GITHUB_OUTPUT
+            TARGET="${{ github.base_ref || github.ref_name }}"
+          fi
+
+          if [[ "$TARGET" == "ci" ]]; then
+            echo "env_name=CI" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "qa" ]]; then
+            echo "env_name=QA" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "uat" ]]; then
+            echo "env_name=UAT" >> $GITHUB_OUTPUT
           fi
 
   # -----------------------------------------
