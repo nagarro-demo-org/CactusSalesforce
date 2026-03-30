@@ -50,6 +50,9 @@ jobs:
   validate-or-deploy:
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: write
+      pull-requests: write
 
     # ✅ IMPORTANT: attach environment here
     environment:
