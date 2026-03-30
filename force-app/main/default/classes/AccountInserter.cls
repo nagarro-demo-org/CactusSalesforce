@@ -2,6 +2,6 @@ public class AccountInserter
 {
     public static void insertAccount()
     {
-        insert new Account(Name='One Two three four five six');
+        insert new Account(Name='One Two three four five');
     }
 }
