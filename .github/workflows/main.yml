@@ -1,22 +1,29 @@
 name: Salesforce Delta Deployment
 
+run-name: "Run on ${{ github.event_name }} in ${{ github.event.pull_request.base.ref || github.ref_name }} by @${{ github.actor }} (PR #${{ github.event.pull_request.number || 'N/A' }})"
+
 on:
   pull_request:
     branches: [ci, qa, uat, main]
-    #paths:
-    #  - 'force-app/**'
-  push:
-    branches: [ci, qa, uat, main]
-    #paths:
-    #  - 'force-app/**'
+    paths:
+      - 'force-app/**'
+      - 'manifest/**'
+      - '.github/workflows/main.yml'
+
+  pull_request_review:
+    types: [submitted]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: write
+  pull-requests: write
+
+# -----------------------------------------
+# 1. SETUP
+# -----------------------------------------
 jobs:
-  # -----------------------------------------
-  # STEP 1: Determine Environment
-  # -----------------------------------------
   setup:
     runs-on: ubuntu-latest
     outputs:
@@ -26,72 +33,56 @@ jobs:
       - name: Set target environment
         id: env
         run: |
-          if [[ "${{ github.base_ref }}" == "ci" || "${{ github.ref_name }}" == "ci" ]]; then
-            echo "env_name=CI" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.base_ref }}" == "qa" || "${{ github.ref_name }}" == "qa" ]]; then
-            echo "env_name=QA" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.base_ref }}" == "uat" || "${{ github.ref_name }}" == "uat" ]]; then
-            echo "env_name=UAT" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
+            TARGET="${{ github.event.pull_request.base.ref }}"
           else
+            TARGET="${{ github.base_ref || github.ref_name }}"
+          fi
+
+          if [[ "$TARGET" == "ci" ]]; then
+            echo "env_name=CI" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "qa" ]]; then
+            echo "env_name=QA" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "uat" ]]; then
+            echo "env_name=UAT" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "main" ]]; then
             echo "env_name=PROD" >> $GITHUB_OUTPUT
           fi
 
-  # -----------------------------------------
-  # STEP 2: Validate / Deploy
-  # -----------------------------------------
-  validate-or-deploy:
+# -----------------------------------------
+# 2. BUILD (Generate Delta)
+# -----------------------------------------
+  build:
     runs-on: ubuntu-latest
     needs: setup
 
-    # ✅ IMPORTANT: attach environment here
-    environment:
-      name: ${{ needs.setup.outputs.env_name }}
+    outputs:
+      has_delta: ${{ steps.check.outputs.has_delta }}
 
     steps:
-      # -----------------------------------------
-      # Checkout & Setup
-      # -----------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Salesforce CLI
+      - name: Install CLI & Plugins
         run: |
           npm install -g @salesforce/cli
           sf version
-
-      - name: Install sfdx-git-delta
-        run: |
           echo y | sf plugins install sfdx-git-delta
           sfdx plugins | grep sfdx-git-delta
 
-      # -----------------------------------------
-      # Authenticate (JWT)
-      # -----------------------------------------
-      - name: Authenticate to Salesforce (JWT)
-        run: |
-          echo "${{ secrets.SF_JWT_KEY }}" > server.key
-
-          sf org login jwt \
-            --client-id ${{ secrets.SF_CONSUMER_KEY }} \
-            --jwt-key-file server.key \
-            --username ${{ secrets.SF_USERNAME }} \
-            --alias targetOrg \
-            --instance-url ${{ secrets.SF_INSTANCE_URL }}
-
-      # -----------------------------------------
-      # Generate Delta
-      # -----------------------------------------
       - name: Generate Delta
+        id: delta
         run: |
           mkdir -p delta
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            FROM=${{ github.event.pull_request.base.sha }}
-            TO=${{ github.event.pull_request.head.sha }}
-          else
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
             FROM=${{ github.event.before }}
             TO=${{ github.sha }}
+          else
+            FROM=${{ github.event.pull_request.base.sha }}
+            TO=${{ github.event.pull_request.head.sha }}
           fi
 
           sf sgd source delta \
@@ -99,36 +90,154 @@ jobs:
             --from $FROM \
             --output-dir delta \
             --repo-dir . \
-            --generate-delta \
-            --api-version 66.0
+            --generate-delta
 
+      - name: Check Delta
+        id: check
+        run: |
           echo "──── package.xml ────"
           cat delta/package/package.xml || echo "(empty)"
           echo "──── destructiveChanges.xml ────"
           cat delta/destructiveChanges/destructiveChanges.xml 2>/dev/null || echo "(none)"
-      
-      # -----------------------------------------
-      # VALIDATION (PR)
-      # -----------------------------------------
-      - name: Validate Deployment (PR)
-        if: github.event_name == 'pull_request'
+
+          if ! grep -q "<types>" delta/package/package.xml && ! grep -q "<types>" delta/destructiveChanges/destructiveChanges.xml; then
+            echo "has_delta=true" >> $GITHUB_OUTPUT
+            echo "Nothing to deploy or delete"
+          else
+            echo "has_delta=false" >> $GITHUB_OUTPUT
+            cp sfdx-project.json delta/
+          fi
+
+      - name: Upload Delta Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: delta
+          path: delta
+
+# -----------------------------------------
+# 3. VALIDATE (PR)
+# -----------------------------------------
+  validate:
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: github.event_name == 'pull_request' && needs.build.outputs.has_delta != 'true'
+
+    environment:
+      name: ${{ needs.setup.outputs.env_name }}
+
+    steps:
+      - name: Download Delta
+        uses: actions/download-artifact@v4
+        with:
+          name: delta
+
+      - name: Install CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Salesforce Authenticate
         run: |
-          sf project deploy validate  \
-            --manifest delta/package/package.xml \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CONSUMER_KEY }} \
+            --jwt-key-file server.key \
+            --username ${{ secrets.SF_USERNAME }} \
+            --alias targetOrg \
+            --instance-url ${{ secrets.SF_INSTANCE_URL }}
+
+      - name: Validate Delta (PR)
+        run: |
+          sf project deploy validate \
+            --manifest ./package/package.xml \
+            --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunRelevantTests \
             --wait 30
 
-      # -----------------------------------------
-      # DEPLOYMENT (Push)
-      # -----------------------------------------
-      - name: Deploy (Push)
-        if: github.event_name == 'push'
+# -----------------------------------------
+# 4. DEPLOY (On Approval)
+# -----------------------------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && needs.build.outputs.has_delta != 'true'
+
+    environment:
+      name: ${{ needs.setup.outputs.env_name }}
+
+    steps:
+      - name: Download Delta
+        uses: actions/download-artifact@v4
+        with:
+          name: delta
+
+      - name: Install CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Salesforce Authenticate
+        run: |
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CONSUMER_KEY }} \
+            --jwt-key-file server.key \
+            --username ${{ secrets.SF_USERNAME }} \
+            --alias targetOrg \
+            --instance-url ${{ secrets.SF_INSTANCE_URL }}
+
+      - name: Deploy Delta (On Approval)
         run: |
           sf project deploy start \
-            --manifest delta/package/package.xml \
-            --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
+            --manifest ./package/package.xml \
+            --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunRelevantTests \
-            --wait 30    
+            --wait 30
+
+# -----------------------------------------
+# 5. AUTO MERGE (on successful deployment)
+# -----------------------------------------
+  auto-merge:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && success()
+
+    steps:
+      - name: Auto Merge on Successful Deployment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.warning('No PR found in context');
+              return;
+            }
+            
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'squash'
+              });
+              core.info(`✅ Pull request #${pr.number} merged successfully`);
+            } catch (error) {
+              core.error(`❌ Failed to merge PR: ${error.message}`);
+              throw error;
+            }
+
+# -----------------------------------------
+# 6. REPORT (Always Runs)
+# -----------------------------------------
+  report:
+    runs-on: ubuntu-latest
+    needs: [setup,build, validate, deploy, auto-merge]
+    if: always()
+
+    steps:
+      - name: Summary
+        run: |
+          echo "Setup: ${{ needs.setup.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Validate: ${{ needs.validate.result }}"
+          echo "Deploy: ${{ needs.deploy.result }}"
+          echo "Merge: ${{ needs.auto-merge.result }}"
