@@ -1,6 +1,5 @@
 name: Salesforce Delta Deployment
-run-name: "Run on $${{ github.event_name }} in ${{ github.event.pull_request.base.ref || github.ref_name }} ENV by @${{ github.actor }}"
-
+run-name: "Run on ${{ github.event_name }} in ${{ github.event.pull_request.base.ref || github.ref_name }} by @${{ github.actor }} (PR #${{ github.event.pull_request.number || 'N/A' }})"
 
 on:
   pull_request:
