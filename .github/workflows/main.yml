@@ -1,4 +1,5 @@
 name: Salesforce Delta Deployment
+run-name: "Run on ${{ github.event.pull_request.base.ref || github.ref_name }} by @${{ github.actor }}"
 
 on:
   pull_request:
@@ -10,8 +11,6 @@ on:
 
   pull_request_review:
     types: [submitted]
-    #branches: [ci, qa, uat, main]
-
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -41,6 +40,8 @@ jobs:
             echo "env_name=QA" >> $GITHUB_OUTPUT
           elif [[ "$TARGET" == "uat" ]]; then
             echo "env_name=UAT" >> $GITHUB_OUTPUT
+          elif [[ "$TARGET" == "main" ]]; then
+            echo "env_name=PROD" >> $GITHUB_OUTPUT
           fi
 
   # -----------------------------------------
@@ -49,6 +50,9 @@ jobs:
   validate-or-deploy:
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: write
+      pull-requests: write
 
     # ✅ IMPORTANT: attach environment here
     environment:
@@ -121,7 +125,7 @@ jobs:
       - name: Validate Deployment (PR)
         if: github.event_name == 'pull_request'
         run: |
-          sf project deploy validate  \
+          sf project deploy validate \
             --manifest delta/package/package.xml \
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
@@ -129,9 +133,9 @@ jobs:
             --wait 30
 
       # -----------------------------------------
-      # DEPLOYMENT (Push)
+      # DEPLOYMENT (Approved Review)
       # -----------------------------------------
-      - name: Deploy (Push)
+      - name: Deploy (PR Approved)
         if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
         run: |
           sf project deploy start \
@@ -139,4 +143,32 @@ jobs:
             --post-destructive-changes delta/destructiveChanges/destructiveChanges.xml \
             --target-org targetOrg \
             --test-level RunRelevantTests \
-            --wait 30    
+            --wait 30
+
+      # -----------------------------------------
+      # AUTO MERGE (on successful deployment)
+      # -----------------------------------------
+      - name: Auto Merge on Successful Deployment
+        if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.warning('No PR found in context');
+              return;
+            }
+            
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'squash'
+              });
+              core.info(`✅ Pull request #${pr.number} merged successfully`);
+            } catch (error) {
+              core.error(`❌ Failed to merge PR: ${error.message}`);
+              throw error;
+            }
