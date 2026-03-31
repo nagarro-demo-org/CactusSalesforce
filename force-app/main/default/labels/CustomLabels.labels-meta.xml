@@ -7,4 +7,11 @@
         <shortDescription>Client Name</shortDescription>
         <value>Client Name</value>
     </labels>
+    <labels>
+        <fullName>CI_URL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CI_URL</shortDescription>
+        <value>https://nagarro229-dev-ed.my.salesforce-setup.com/</value>
+    </labels>
 </CustomLabels>
