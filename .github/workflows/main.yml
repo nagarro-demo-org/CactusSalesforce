@@ -151,7 +151,7 @@ jobs:
 
       - name: Validate Delta (PR)
         run: |
-          source ./.env
+          export $(grep -v '^#' .env | xargs)
           sf project deploy validate \
             --manifest ./package/package.xml \
             --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
