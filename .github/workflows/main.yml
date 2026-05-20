@@ -58,7 +58,7 @@ jobs:
 
     environment:
       name: ${{ needs.setup.outputs.env_name }}
-      
+
     outputs:
       has_delta: ${{ steps.check.outputs.has_delta }}
 
@@ -109,7 +109,7 @@ jobs:
           else
             echo "has_delta=false" >> $GITHUB_OUTPUT
             cp sfdx-project.json delta/
-            cp env/.env.${{ needs.setup.outputs.env_name }} delta/
+            cp env/.env.${{ needs.setup.outputs.env_name }} delta/.env
           fi
 
       - name: Upload Delta Artifact
