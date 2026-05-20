@@ -12,6 +12,6 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>CI_URL</shortDescription>
-        <value>https://nagarro229-dev-ed.my.salesforce-setup.com/</value>
+        <value>{env.CI_URL}</value>
     </labels>
 </CustomLabels>

@@ -8,5 +8,13 @@
   "name": "CactusSalesforce",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "66.0"
+  "sourceApiVersion": "66.0",
+
+  "replacements": [
+    {
+      "filename": "force-app/main/default/labels/CustomLabels.labels-meta.xml",
+      "stringToReplace": "{env.CI_URL}",
+      "replaceWithEnv": "CI_URL"
+    }
+  ]
 }
