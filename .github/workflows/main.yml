@@ -117,6 +117,7 @@ jobs:
         with:
           name: delta
           path: delta
+          include-hidden-files: true
 
 # -----------------------------------------
 # 3. VALIDATE (PR)
