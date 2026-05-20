@@ -12,6 +12,6 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>CI_URL</shortDescription>
-        <value>${env.CI_URL}</value>
+        <value>{env.CI_URL}</value>
     </labels>
 </CustomLabels>
