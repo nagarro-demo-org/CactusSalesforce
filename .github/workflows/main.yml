@@ -191,7 +191,7 @@ jobs:
 
       - name: Deploy Delta (On Approval)
         run: |
-          source ./.env
+          export $(grep -v '^#' .env | xargs)
           sf project deploy start \
             --manifest ./package/package.xml \
             --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
