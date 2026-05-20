@@ -146,6 +146,7 @@ jobs:
 
       - name: Validate Delta (PR)
         run: |
+          source env/.env.${{ needs.setup.outputs.env_name }}
           sf project deploy validate \
             --manifest ./package/package.xml \
             --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
@@ -185,6 +186,7 @@ jobs:
 
       - name: Deploy Delta (On Approval)
         run: |
+          source env/.env.${{ needs.setup.outputs.env_name }}
           sf project deploy start \
             --manifest ./package/package.xml \
             --post-destructive-changes ./destructiveChanges/destructiveChanges.xml \
